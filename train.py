@@ -3,6 +3,10 @@ from data_tokenizer import tokenizer
 from model import model
 from preprocessing_multi_news import tokenized_data
 
+import os
+os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
+
+
 #bart_base = "facebook/bart-base"
 t5 = "t5-small"
 collator = DataCollatorForSeq2Seq(tokenizer=tokenizer, model=t5, return_tensors="tf")
@@ -37,4 +41,4 @@ import tensorflow as tf
 
 model.compile(optimizer=optimizer)  # No loss argument!
 
-model.fit(x=tf_train, validation_data=tf_val, epochs=3, batch_size=1)
+model.fit(x=tf_train, validation_data=tf_val, epochs=3, batch_size=0)
