@@ -1,5 +1,6 @@
 from transformers import TFAutoModelForSeq2SeqLM
 
-name = "facebook/bart-large-xsum" # The large xsum version has 1.5GB.
+#name = "facebook/bart-base"
+name = "t5-small"
 
 model = TFAutoModelForSeq2SeqLM.from_pretrained(name)
