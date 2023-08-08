@@ -38,6 +38,7 @@ tf_test = model.prepare_tf_dataset(
 
 
 import tensorflow as tf
+tf.config.list_physical_devices('GPU')
 
 model.compile(optimizer=optimizer)  # No loss argument!
 
