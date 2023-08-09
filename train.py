@@ -3,17 +3,17 @@ from data_tokenizer import tokenizer
 import tensorflow as tf
 from transformers.keras_callbacks import PushToHubCallback, KerasMetricCallback
 from model import model
+from datasets import load_metric
 from preprocessing_multi_news import tokenized_data
 from transformers import create_optimizer, AdamWeightDecay
 import os
 import numpy as np
+
 import nltk
+nltk.download('punkt')
 
 
-os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
-
-print("Number of GPUs Available:", len(tf.config.list_physical_devices('GPU')))
-
+metric = load_metric("rouge")
 
 def metric_fn(eval_predictions):
     predictions, labels = eval_predictions
@@ -47,6 +47,8 @@ data_collator = DataCollatorForSeq2Seq(tokenizer, model=model, return_tensors="n
 
 generation_data_collator = DataCollatorForSeq2Seq(tokenizer, model=model, return_tensors="np", pad_to_multiple_of=128)
 
+model_weights_path = "/content/drive/MyDrive/weights/model_weights"
+saved_model_path = "/content/drive/MyDrive/model/saved_model"
 
 
 train_dataset = model.prepare_tf_dataset(
@@ -72,6 +74,14 @@ test_dataset = model.prepare_tf_dataset(
 
 push_to_hub_model_id = "t5-small-finetuned-multi_news"
 
+checkpoint_path = "/content/drive/MyDrive/weights/cp.ckpt"
+checkpoint_dir = os.path.dirname(checkpoint_path)
+
+# Create a callback that saves the model's weights
+cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_path,
+                                                 save_weights_only=True,
+                                                 verbose=1)
+
 optimizer = AdamWeightDecay(learning_rate=2e-5, weight_decay_rate=0.01)
 model.compile(optimizer=optimizer)  # No loss argument!
 
@@ -82,10 +92,11 @@ push_to_hub_callback = PushToHubCallback(
 )
 
 metric_callback = KerasMetricCallback(
-    metric_fn, eval_dataset=test_dataset, predict_with_generate=True, use_xla_generation=True
+    metric_fn, eval_dataset=validation_dataset, predict_with_generate=True, use_xla_generation=True
 )
 
-callbacks = [metric_callback,  push_to_hub_callback]
+callbacks = [metric_callback,  push_to_hub_callback, cp_callback]
 
-model.fit(x=train_dataset, validation_data=validation_dataset, epochs=5, batch_size=1)
+model.fit(x=train_dataset, validation_data=validation_dataset, epochs=5, batch_size=4, callbacks=callbacks)
+
 
