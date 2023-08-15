@@ -30,7 +30,6 @@ def train():
 
     tokenizer = TextTokenizer(max_length=max_length, vocab_path=VOCAB_PATH)
     vocab_size = tokenizer.get_vocab_size()
-    print(vocab_size)
 
     train_batches = tokenizer.make_batches(train_examples)
     val_batches = tokenizer.make_batches(val_examples)
@@ -67,3 +66,13 @@ def train():
 
 if __name__ == '__main__':
     train()
+
+
+# import os
+# os.makedirs('drive/MyDrive/project_folder', exist_ok=True)
+# %cd drive/MyDrive/project_folder
+# !git clone https://github.com/acafinalproject/textsummarization.git
+# %cd textsummarization
+# !git checkout training_example
+# !pip install python-dotenv
+# !python train.py
