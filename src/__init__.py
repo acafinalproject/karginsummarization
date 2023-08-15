@@ -1,2 +1,1 @@
-from src.utils import Transformer
-from src.model import Summarizer
+from src.logging import logger

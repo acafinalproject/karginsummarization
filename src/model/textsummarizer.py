@@ -1,55 +1,59 @@
 import tensorflow as tf
-import tensorflow_datasets as tfds
-from src.utils import Transformer
-from transformers import AutoTokenizer
 
-article = """australian shares closed"""
+class TextSummarizer(tf.Module):
+  def __init__(self, tokenizer, transformer):
+    self.tokenizer = tokenizer
+    self.transformer = transformer
+
+  def __call__(self, sentence, max_length=128):
+    assert isinstance(sentence, tf.Tensor)
+    if len(sentence.shape) == 0:
+      sentence = sentence[tf.newaxis]
+
+    encoder_input = self.tokenizer(sentence)
+
+    # As the output language is English, initialize the output with the
+    # English `[START]` token.
+    start_end = self.tokenizer([''])[0]
+    start = start_end[0][tf.newaxis]
+    end = start_end[1][tf.newaxis]
+
+    # `tf.TensorArray` is required here (instead of a Python list), so that the
+    # dynamic-loop can be traced by `tf.function`.
+    output_array = tf.TensorArray(dtype=tf.int64, size=0, dynamic_size=True)
+    output_array = output_array.write(0, start)
+
+    for i in tf.range(max_length):
+      output = tf.transpose(output_array.stack())
+      
+      predictions = self.transformer([encoder_input, output], training=False)
+
+      # Select the last token from the `seq_len` dimension.
+      predictions = predictions[:, -1:, :]  # Shape `(batch_size, 1, vocab_size)`.
+
+      predicted_id = tf.argmax(predictions, axis=-1)
+
+      # Concatenate the `predicted_id` to the output which is given to the
+      # decoder as its input.
+      output_array = output_array.write(i+1, predicted_id[0])
+
+      if predicted_id == end:
+        break
+
+    output = tf.transpose(output_array.stack())
+
+    # The output shape is `(1, tokens)`.
+    text = self.tokenizer.detokenize(output)[0] #[1:]  # Shape: `()`.
+
+    return text
 
 
-# input_ids = tokenizer(article, return_tensors="tf").input_ids
+class ExportSummarizer(tf.Module):
+  def __init__(self, summarizer):
+    self.summarizer = summarizer
 
-class Summarizer(tf.keras.Model):
-    def __init__(self, *, num_layers, d_model, num_heads, dff, max_target_len=50, dropout_rate=0.1):
-        super().__init__()
-        self.tokenizer = AutoTokenizer.from_pretrained("google/roberta2roberta_L-24_gigaword", cache_dir="home/samvel/aca/data")
-        self.num_layers = num_layers
-        self.d_model = d_model
-        self.num_heads = num_heads
-        self.dff = dff
-        self.dropout_rate = dropout_rate
-        self.max_target_len = max_target_len
+  @tf.function(input_signature=[tf.TensorSpec(shape=[], dtype=tf.string)])
+  def __call__(self, sentence):
+    result = self.summarizer(sentence)
 
-        self.eos = self.tokenizer.eos_token_id
-        self.bos = self.tokenizer.bos_token_id
-
-        self.input_vocab_size = self.tokenizer.vocab_size
-        self.target_vocab_size = self.tokenizer.vocab_size
-
-        self.model = Transformer(num_layers=self.num_layers, d_model=self.d_model, num_heads=self.num_heads, dff=self.dff, 
-                                 input_vocab_size=self.input_vocab_size, target_vocab_size=self.target_vocab_size, dropout_rate=self.dropout_rate)
-
-    @tf.function
-    def call(self, x):
-        x_tokenized = self.tokenizer(x, return_tensors="tf").input_ids
-        
-        current_output = None
-        target_len = 0
-
-        output = [self.bos]
-
-        while current_output != self.eos and target_len <= self.max_target_len:
-            current_output = self.model((x_tokenized, output))
-
-            assert type(current_output) == int | "Current output is not int"
-
-            output.append(current_output)
-
-        return self.tokenizer.decode(output)
-
-    
-    def train_step(self, ):
-        pass
-
-    @property
-    def metrics():
-        pass
+    return result
