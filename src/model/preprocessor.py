@@ -37,6 +37,4 @@ def preprocess_function(examples):
 
 tokenized_data = transformed_data.map(preprocess_function, batched=True, remove_columns=['article', 'highlights', 'id'])
 
-rouge = evaluate.load("rouge")
-
 
