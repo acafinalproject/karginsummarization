@@ -22,7 +22,7 @@ BATCH_SIZE = int(config_training['BATCH_SIZE'])
 class CustomTokenizer(tf.Module):
   def __init__(self, vocab_path):
     self._reserved_tokens = ["[PAD]", "[UNK]", "[START]", "[END]"]
-    self.tokenizer = text.BertTokenizer(vocab_path, lower_case=True)
+    self.tokenizer = text.BertTokenizer(vocab_path)
 
     self.START = tf.argmax(tf.constant(self._reserved_tokens) == "[START]")
     self.END = tf.argmax(tf.constant(self._reserved_tokens) == "[END]")
