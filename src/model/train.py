@@ -18,7 +18,7 @@ collator = model.collator(tokenizer, checkpoint)
 
 # Define training arguments
 training_args = Seq2SeqTrainingArguments(
-    output_dir="chkpt",
+    output_dir="T5",
     evaluation_strategy="epoch",
     learning_rate=5e-5,
     per_device_train_batch_size=8,
