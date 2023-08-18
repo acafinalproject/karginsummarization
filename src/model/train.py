@@ -3,12 +3,20 @@ import model
 import preprocessor
 from metrics import compute_metrics
 
+# Define the checkpoint and tokenizer
 checkpoint = 't5-small'
 tokenizer = preprocessor.tokenizer
+
+# Load or create the model
 model = model.model(checkpoint)
+
+# Load the tokenized dataset from preprocessor
 tokenized_data = preprocessor.tokenized_data
+
+# Create a collator for processing batches
 collator = model.collator(tokenizer, checkpoint)
 
+# Define training arguments
 training_args = Seq2SeqTrainingArguments(
     output_dir="chkpt",
     evaluation_strategy="epoch",
@@ -25,6 +33,7 @@ training_args = Seq2SeqTrainingArguments(
     push_to_hub=True,
 )
 
+# Create a Seq2SeqTrainer instance
 trainer = Seq2SeqTrainer(
     model=model,
     args=training_args,
