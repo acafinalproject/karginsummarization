@@ -1,5 +1,6 @@
 from datasets import load_dataset, DatasetDict
 from transformers import AutoTokenizer
+import evaluate
 
 checkpoint = "t5-small"
 dataset = load_dataset("cnn_dailymail", "1.0.0")
@@ -32,5 +33,7 @@ def preprocess_function(examples):
     return model_inputs
 
 tokenized_data = transformed_data.map(preprocess_function, batched=True, remove_columns=['article', 'highlights', 'id'])
+
+rouge = evaluate.load("rouge")
 
 
