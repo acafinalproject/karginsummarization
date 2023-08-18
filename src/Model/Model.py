@@ -2,6 +2,10 @@ import tensorflow as tf
 import Encoder
 import Decoder
 import torch
+from metrics_losses import MaskedAccuracy
+from metrics_losses import PositionalEncoding
+from metrics_losses import masked_loss
+from metrics_losses import CustomSchedule
 
 
 class Transformer(tf.keras.Model):
@@ -71,3 +75,14 @@ class Transformer(tf.keras.Model):
     @property
     def metrics(self):
         return [self.accuracy]
+
+## MOdel construction
+Model = Transformer(3,512,8,512,71430,13,34)
+learning_rate = CustomSchedule(512)
+
+optimizer = tf.keras.optimizers.Adam(learning_rate, beta_1=0.9, beta_2=0.98,
+                                     epsilon=1e-9)
+
+Model.compile(
+    loss=masked_loss,
+    optimizer=optimizer)
