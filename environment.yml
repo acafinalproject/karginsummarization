@@ -1,0 +1,8 @@
+name: kargin_summarization
+channels:
+  - defaults
+dependencies:
+  - pip=23.2.1
+  - python=3.11.4
+  - pip:
+    - -r requirements.txt
