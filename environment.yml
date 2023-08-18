@@ -1,4 +1,4 @@
-name: text_summarization
+name: kargin_summarization
 channels:
   - defaults
 dependencies:
