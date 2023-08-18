@@ -1,6 +1,9 @@
 from datasets import load_dataset, DatasetDict
 from transformers import AutoTokenizer
 import evaluate
+from huggingface_hub import notebook_login
+
+notebook_login()
 
 checkpoint = "t5-small"
 dataset = load_dataset("cnn_dailymail", "1.0.0")
