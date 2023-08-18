@@ -1,31 +1,31 @@
 import tensorflow as tf
+from dotenv import dotenv_values
 
-class TextSummarizer(tf.Module):
+config_structor=dotenv_values(".env.structor")
+
+MAX_TOKENS_SUM=int(config_structor['max_tokens_sum'])
+
+class Summarizer(tf.Module):
   def __init__(self, tokenizer, transformer):
     self.tokenizer = tokenizer
     self.transformer = transformer
 
-  def __call__(self, sentence, max_length=128):
+  def __call__(self, sentence, max_length=MAX_TOKENS_SUM):
     assert isinstance(sentence, tf.Tensor)
     if len(sentence.shape) == 0:
       sentence = sentence[tf.newaxis]
 
-    encoder_input = self.tokenizer(sentence)
+    encoder_input = self.tokenizer.tokenize(sentence).to_tensor()
 
-    # As the output language is English, initialize the output with the
-    # English `[START]` token.
-    start_end = self.tokenizer([''])[0]
+    start_end = self.tokenizer.tokenize([''])[0]
     start = start_end[0][tf.newaxis]
     end = start_end[1][tf.newaxis]
 
-    # `tf.TensorArray` is required here (instead of a Python list), so that the
-    # dynamic-loop can be traced by `tf.function`.
     output_array = tf.TensorArray(dtype=tf.int64, size=0, dynamic_size=True)
     output_array = output_array.write(0, start)
 
     for i in tf.range(max_length):
       output = tf.transpose(output_array.stack())
-      
       predictions = self.transformer([encoder_input, output], training=False)
 
       # Select the last token from the `seq_len` dimension.
@@ -41,12 +41,10 @@ class TextSummarizer(tf.Module):
         break
 
     output = tf.transpose(output_array.stack())
-
     # The output shape is `(1, tokens)`.
-    text = self.tokenizer.detokenize(output)[0] #[1:]  # Shape: `()`.
+    text = self.tokenizer.detokenize(output)[0]  # Shape: `()`.
 
     return text
-
 
 class ExportSummarizer(tf.Module):
   def __init__(self, summarizer):

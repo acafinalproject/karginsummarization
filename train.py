@@ -1,8 +1,8 @@
 import os
 import tensorflow as tf
-from src.components import Transformer, TextTokenizer, CustomCallback
+from src.components import Transformer, CustomTokenizer, CustomCallback, CustomSchedule
 from src.components import prepare_dataset, masked_loss, masked_accuracy
-from src.model import TextSummarizer, ExportSummarizer
+from src.model import Summarizer, ExportSummarizer
 
 from src import logger
 from dotenv import dotenv_values
@@ -15,7 +15,8 @@ DATA=config_path['DATA']
 DATA_DIR=config_path['DATA_DIR']
 SAVE_PATH=config_path['SAVE_PATH']
 VOCAB_PATH=config_path['VOCAB_PATH']
-max_length=int(config_structor['max_length'])
+MAX_TOKENS_DOC=int(config_structor['max_tokens_doc'])
+MAX_TOKENS_SUM=int(config_structor['max_tokens_sum'])
 d_model=int(config_structor['d_model'])
 num_heads=int(config_structor['num_heads'])
 dff=int(config_structor['dff'])
@@ -28,7 +29,7 @@ def train():
 
     train_examples, val_examples = data['train'], data['test']
 
-    tokenizer = TextTokenizer(max_length=max_length, vocab_path=VOCAB_PATH)
+    tokenizer = CustomTokenizer(vocab_path=VOCAB_PATH)
     vocab_size = tokenizer.get_vocab_size()
 
     train_batches = tokenizer.make_batches(train_examples)
@@ -37,7 +38,9 @@ def train():
     transformer = Transformer(num_layers=num_layers, d_model=d_model, num_heads=num_heads, 
                             dff=dff, input_vocab_size=vocab_size, target_vocab_size=vocab_size)
     
-    optimizer = tf.keras.optimizers.Adam(learning_rate=0.001, beta_1=0.9, beta_2=0.98,
+    learning_rate = CustomSchedule(d_model)
+    
+    optimizer = tf.keras.optimizers.Adam(learning_rate, beta_1=0.9, beta_2=0.98,
                                      epsilon=1e-9)
 
     transformer.compile(
@@ -57,19 +60,15 @@ def train():
 
         transformer.load_weights(os.path.join(save_path, "cp-transformer.ckpt"))
 
-
     transformer.fit(train_batches,
                 epochs=epochs,
                 validation_data=val_batches,
                 callbacks=[cp_callback])
     
-
 if __name__ == '__main__':
     train()
 
 
-# import os
-# os.makedirs('drive/MyDrive/project_folder', exist_ok=True)
 # %cd drive/MyDrive/project_folder
 # !git clone https://github.com/acafinalproject/textsummarization.git
 # %cd textsummarization

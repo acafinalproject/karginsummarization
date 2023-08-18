@@ -1,1 +1,1 @@
-from src.model.textsummarizer import TextSummarizer, ExportSummarizer
+from src.model.textsummarizer import Summarizer, ExportSummarizer

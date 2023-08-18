@@ -1,3 +1,5 @@
+# In next release will be deleted:::
+
 import tensorflow as tf
 from dotenv import dotenv_values
 
@@ -5,8 +7,6 @@ config_training=dotenv_values(".env.training")
 
 BUFFER_SIZE = int(config_training['BUFFER_SIZE'])
 BATCH_SIZE = int(config_training['BATCH_SIZE'])
-
-
 
 class TextTokenizer(tf.keras.layers.Layer):
     def __init__(self, max_length, vocab_path):
