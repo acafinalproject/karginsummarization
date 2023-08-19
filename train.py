@@ -27,7 +27,7 @@ every_n_batch=int(config_training['every_n_batch'])
 def train():
     data = prepare_dataset(DATA, DATA_DIR)
 
-    train_examples, val_examples = data['train'], data['test']
+    train_examples, val_examples = data['train'], data['validation']
 
     tokenizer = CustomTokenizer(vocab_path=VOCAB_PATH)
     vocab_size = tokenizer.get_vocab_size()
@@ -67,11 +67,3 @@ def train():
     
 if __name__ == '__main__':
     train()
-
-
-# %cd drive/MyDrive/project_folder
-# !git clone https://github.com/acafinalproject/textsummarization.git
-# %cd textsummarization
-# !git checkout training_example
-# !pip install python-dotenv
-# !python train.py

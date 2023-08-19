@@ -22,8 +22,8 @@ num_heads = int(config_structor['num_heads'])
 dff = int(config_structor['dff'])
 num_layers=int(config_structor['num_layers'])
 
-def prepare_summarizer(dataset):
-    export_dir = os.path.join(DATA_DIR, dataset)
+def prepare_summarizer():
+    export_dir = os.path.join(DATA_DIR, "summarizer")
 
     if not os.path.exists(export_dir):
         tokenizer = CustomTokenizer(vocab_path=VOCAB_PATH)
@@ -66,21 +66,24 @@ def prepare_summarizer(dataset):
 
     return summarizer
 
-def prepare_output(text, dataset):
+def prepare_output(text):
     gif_path = "processing.gif"
 
     if text:
         gif_container = st.empty()
         gif_container.image(gif_path, use_column_width=True)
 
-        summarizer = prepare_summarizer(dataset)
-        tensor_output = summarizer(tf.constant(text))
+        summarizer = prepare_summarizer()
+        tensor_input = tf.constant(text)
 
-        summary = tensor_output['output_0'].numpy().decode("utf-8")
+        tensor_output = list(summarizer(tensor_input)['output_0'].numpy()[1:-1])
 
-        summary = " ".join(list(filter(lambda x: x != "unk", summary.split(" "))))
+        output = list(map(lambda x: x.decode('utf-8'), tensor_output))
+        output = list(filter(lambda x: "UNK" not in x, output))
 
         gif_container.empty()
+        
+        summary = " ".join(output)
         
         return summary if summary else "please check that your input is correct"
     
@@ -89,10 +92,6 @@ def prepare_output(text, dataset):
 
 def main():
     st.set_page_config(layout="wide")
-
-    with st.sidebar:
-        datasets_path = ['gigaword', 'cnn_dailymail']
-        dataset = st.selectbox("Dataset", datasets_path)
 
     st.markdown(
     """
@@ -119,7 +118,9 @@ def main():
         input_text = st.text_area("Enter your text:", "")
 
     with out_col:
-        st.text_area("Summary:", prepare_output(input_text, dataset), disabled=True, placeholder="summarization will be here! ;)")
+        st.text_area("Summary:", prepare_output(input_text), disabled=True, placeholder="summarization will be here! ;)")
+
+
     
     
 if __name__ == "__main__":
