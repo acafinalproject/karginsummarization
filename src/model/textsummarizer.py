@@ -3,6 +3,8 @@ from dotenv import dotenv_values
 
 config_structor=dotenv_values(".env.structor")
 print("A")
+print("B")
+print("C")
 MAX_TOKENS_SUM=int(config_structor['max_tokens_sum'])
 
 class Summarizer(tf.Module):
