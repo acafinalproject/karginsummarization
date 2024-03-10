@@ -2,7 +2,7 @@ import tensorflow as tf
 from dotenv import dotenv_values
 
 config_structor=dotenv_values(".env.structor")
-
+print("A")
 MAX_TOKENS_SUM=int(config_structor['max_tokens_sum'])
 
 class Summarizer(tf.Module):
